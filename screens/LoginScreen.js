@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -45,69 +54,106 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      {/* Logo */}
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <Text style={styles.title}>Zoppli</Text>
+      <Text style={styles.subtitle}>100% Green Deliveries in India</Text>
 
+      {/* email and Password Inputs */}
       <TextInput
-        placeholder="Email"
+        style={styles.input}
+        placeholder="email"
         value={email}
         onChangeText={setEmail}
-        keyboardType="email-address"
-        style={styles.input}
       />
-
       <TextInput
+        style={styles.input}
         placeholder="Password"
+        secureTextEntry
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
       />
-
-      <TouchableOpacity onPress={handleLogin} style={styles.button} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
+      
+      {/* Login Button */}
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Login'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.linkText}>Don't have an account? Register</Text>
-      </TouchableOpacity>
+      {/* OR Divider */}
+      <Text style={styles.orText}>OR</Text>
+      <View style={styles.socialButtons}>
+        <Button title="Facebook" onPress={() => {}} />
+        <Button title="Google" onPress={() => {}} />
+      </View>
+
+      {/* Terms and Policies */}
+      <Text style={styles.footer}>
+        By continuing, you agree to our {'\n'}
+        <Text style={styles.link}>Terms of Service</Text>,{' '}
+        <Text style={styles.link}>Privacy Policy</Text>,{' '}
+        <Text style={styles.link}>Content Policy</Text>
+      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     flex: 1,
+    backgroundColor: '#F4385A',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    padding: 16,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
-    fontWeight: 'bold',
+    fontSize: 32,
+    color: '#FFFFFF',
     textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
+    padding: 10,
+    marginVertical: 8,
   },
   button: {
-    backgroundColor: '#007BFF',
-    padding: 15,
+    backgroundColor: '#FF9900',
     borderRadius: 5,
+    padding: 15,
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  linkText: {
-    color: '#007BFF',
+  orText: {
     textAlign: 'center',
+    marginVertical: 10,
+    color: '#FFFFFF',
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  footer: {
+    textAlign: 'center',
+    color: '#FFFFFF',
+    marginTop: 20,
+  },
+  link: {
+    color: '#00C853',
   },
 });
 

@@ -21,6 +21,7 @@ const UserProfileScreen = ({ navigation }) => {
 
         if (response.status === 200 && response.data.success) {
           setUser(response.data.user); // Set user data
+          console.log("User data fetched successfully");
         }
       } catch (error) {
         Alert.alert('Error', 'Unable to fetch user details. Please try again.');
