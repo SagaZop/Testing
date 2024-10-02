@@ -1,133 +1,134 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import axios from 'axios';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Hardcoded userType as "customer"
+  const userType = 'customer';
 
   const handleRegister = async () => {
-    if (isLoading) return;
-  
-    setIsLoading(true);
+    // Validate input (basic validation before API call)
+    if (!name || !email || !phoneNumber || !password) {
+      return Alert.alert('Error', 'Please fill in all fields');
+    }
+
+    // Create request payload
+    const userData = { name, email, phone_number: phoneNumber, user_type: userType, password };
+
+    setLoading(true);
+
     try {
-      const userType = 'customer';
-      const response = await axios.post('http://10.0.2.2:5000/api/auth/register', {
-        name,
-        email,
-        phone_number: phone,
-        user_type: userType,
-        password,
-      });
-  
+      // Make an API call to your register endpoint
+      const response = await axios.post(`http://10.0.2.2:5000/api/auth/register`, userData);
+
+      // Handle successful registration
       if (response.status === 201) {
-        Alert.alert('Success', response.data.message, [
-          { text: 'OK', onPress: () => navigation.navigate('Login') },  // Redirect to Login
-        ]);
+        Alert.alert('Success', 'Registration successful! Please check your email for verification link.');
+        // Navigate to Login screen
+        navigation.navigate('Login');
       }
     } catch (error) {
-      setIsLoading(false);
-  
-      // Log the error details for debugging
-      console.log('Error details:', error);
-  
-      if (error.response) {
-        if (error.response.status === 400) {
-          const errors = error.response.data.error;
-          const errorMessage = errors.map(err => `${err.path}: ${err.message}`).join('\n');
-          Alert.alert('Validation Error', errorMessage);
-        } else if (error.response.status === 500) {
-          Alert.alert('Server Error', 'An error occurred on the server. Please try again later.');
-        }
+      // Handle validation errors or server errors
+      if (error.response && error.response.data && error.response.data.error) {
+        const errorMessages = Array.isArray(error.response.data.error)
+          ? error.response.data.error.map(e => e.message).join('\n')
+          : error.response.data.error;
+
+        Alert.alert('Registration Error', errorMessages);
       } else {
-        Alert.alert('Error', 'Something went wrong. Please try again.');
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>Register at Zoppli</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Register</Text>
 
-      {/* Name Input */}
       <TextInput
-        style={styles.input}
-        placeholder="Full Name"
+        placeholder="Name"
         value={name}
         onChangeText={setName}
+        style={styles.input}
       />
 
-      {/* Email Input */}
       <TextInput
-        style={styles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        style={styles.input}
       />
 
-      {/* Phone Input */}
       <TextInput
-        style={styles.input}
         placeholder="Phone Number"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="numeric"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
+        keyboardType="phone-pad"
+        style={styles.input}
       />
 
-      {/* Password Input */}
       <TextInput
-        style={styles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry={true}
+        secureTextEntry
+        style={styles.input}
       />
 
-      {/* Register Button */}
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>{isLoading ? 'Registering...' : 'Register'}</Text>
+      <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
       </TouchableOpacity>
-    </View>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.linkText}>Already have an account? Login</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f9f9f9',
+    flexGrow: 1,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
   },
-  logo: {
-    fontSize: 36,
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
     fontWeight: 'bold',
-    marginBottom: 40,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
   },
   button: {
-    backgroundColor: '#0288d1',
+    backgroundColor: '#007BFF',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
+    marginBottom: 20,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  linkText: {
+    color: '#007BFF',
+    textAlign: 'center',
   },
 });
 

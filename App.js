@@ -1,71 +1,105 @@
-// App.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Image, Text, View, StyleSheet } from 'react-native';
-import LoginScreen from './screens/LoginScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import RegisterScreen from './screens/RegisterScreen';
-import BrowseRestaurants from './screens/BrowseRestaurants';
-import InitialLoadingScreen from './screens/InitialLoadingScreen';
-import logo from './assets/logo.png'
-const Stack = createStackNavigator();
+import LoginScreen from './screens/LoginScreen';
+import HomeScreen from './screens/HomeScreen';
+import RestaurantDetailScreen from './screens/RestaurantDetailScreen';
+import UserProfileScreen from './screens/UserProfileScreen';
+import { initializeApp } from './utils/auth'; // Import your utility function for token check
 
-// Custom header with logo and title
-const CustomHeaderTitle = () => {
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const HomeTabNavigator = () => {
   return (
-    <View style={styles.headerContainer}>
-      <Image
-        source={logo} // Replace with your image path
-        style={styles.logo}
-      />
-      <Text style={styles.headerText}>Zoppli</Text>
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === 'HomeTab') {
+            iconName = 'home';
+          } else if (route.name === 'UserTab') {
+            iconName = 'person';
+          }
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarLabel: ({ focused }) => {
+          let label;
+          if (route.name === 'HomeTab') {
+            label = 'Home';
+          } else if (route.name === 'UserTab') {
+            label = 'User';
+          }
+          return <Text style={{ color: focused ? '#FF6347' : '#555' }}>{label}</Text>;
+        },
+        tabBarStyle: { height: 60, paddingBottom: 5 },
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen name="HomeTab" component={HomeScreen} />
+      <Tab.Screen name="UserTab" component={UserProfileScreen} />
+    </Tab.Navigator>
   );
 };
 
-export default function App() {
+const MainStackNavigator = ({ isLoggedIn }) => {
+  return (
+    <Stack.Navigator
+      initialRouteName={isLoggedIn ? 'MainHome' : 'Login'} // Redirect based on login status
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="MainHome" component={HomeTabNavigator} />
+      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen}/>
+    </Stack.Navigator>
+  );
+};
+
+const App = () => {
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkTokenStatus = async () => {
+      try {
+        // Check token status and update login status
+        const accessToken = await initializeApp(); // Function to initialize token status
+        if (accessToken) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.log('Token check error:', error);
+        setIsLoggedIn(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkTokenStatus();
+  }, []);
+
+  if (loading) {
+    // Show loading indicator while checking token status
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007BFF" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="InitialLoading">
-        <Stack.Screen 
-          name="InitialLoading" 
-          component={InitialLoadingScreen} 
-          options={{ headerShown: false }} 
-        />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ headerShown: false }} 
-        />
-        <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
-          options={{ headerShown: false }} 
-        />
-        <Stack.Screen 
-          name="BrowseRestaurants" 
-          component={BrowseRestaurants}
-          options={{
-            headerTitle: () => <CustomHeaderTitle />,  // Use the custom header component
-          }} 
-        />
-      </Stack.Navigator>
+      <MainStackNavigator isLoggedIn={isLoggedIn} />
     </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 30,
-    height: 30,  // Adjust size as needed
-    marginRight: 10,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});
+export default App;
