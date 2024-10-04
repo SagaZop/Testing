@@ -8,10 +8,10 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useAlert } from '../App'; // Import useAlert hook
 
 const HomeScreen = ({navigation}) => {
   const [categories, setCategories] = useState([]);
@@ -19,9 +19,13 @@ const HomeScreen = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Access the showAlert function
+  const { showAlert } = useAlert();
+
   // Placeholder image in case no image is available for a category or restaurant.
   const defaultDishImage = 'http://10.0.2.2:5000/images/default-dish.png';
 
+  
   // Fetch categories and restaurants from the backend
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +41,7 @@ const HomeScreen = ({navigation}) => {
         setRestaurants(restaurantResponse.data);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        Alert.alert('Error', 'Failed to fetch data. Please try again.');
+        showAlert('danger', 'Failed to fetch data. Please try again.'); // Show custom alert
       } finally {
         setLoading(false);
       }
@@ -46,7 +50,6 @@ const HomeScreen = ({navigation}) => {
     fetchData();
   }, []);
 
-  // Render a single category item
   // Render a single category item
   const renderCategory = ({item}) => (
     <TouchableOpacity style={styles.categoryItem}>
@@ -121,6 +124,7 @@ const HomeScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
+
       {/* Header with Address and Search Bar */}
       <View style={styles.header}>
         <Text style={styles.addressText}>

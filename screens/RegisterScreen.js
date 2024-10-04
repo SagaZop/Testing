@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Button } from 'react-native';
 import axios from 'axios';
+import { useAlert } from '../App'; // Import useAlert hook
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -9,41 +10,26 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Hardcoded userType as "customer"
-  const userType = 'customer';
+  // Access the showAlert function
+  C
 
   const handleRegister = async () => {
-    // Validate input (basic validation before API call)
     if (!name || !email || !phoneNumber || !password) {
-      return Alert.alert('Error', 'Please fill in all fields');
+      return showAlert('danger', 'Please fill in all fields');
     }
 
-    // Create request payload
-    const userData = { name, email, phone_number: phoneNumber, user_type: userType, password };
+    const userData = { name, email, phone_number: phoneNumber, user_type: 'customer', password };
 
     setLoading(true);
 
     try {
-      // Make an API call to your register endpoint
       const response = await axios.post(`http://10.0.2.2:5000/api/auth/register`, userData);
-
-      // Handle successful registration
       if (response.status === 201) {
-        Alert.alert('Success', 'Registration successful! Please check your email for verification link.');
-        // Navigate to Login screen
+        showAlert('success', 'Registration successful! Please check your email for verification link.');
         navigation.navigate('Login');
       }
     } catch (error) {
-      // Handle validation errors or server errors
-      if (error.response && error.response.data && error.response.data.error) {
-        const errorMessages = Array.isArray(error.response.data.error)
-          ? error.response.data.error.map(e => e.message).join('\n')
-          : error.response.data.error;
-
-        Alert.alert('Registration Error', errorMessages);
-      } else {
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      }
+      showAlert('danger', error.response?.data?.error || 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -84,10 +70,19 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.input}
       />
 
+      {/* Register Button */}
       <TouchableOpacity onPress={handleRegister} style={styles.button} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
       </TouchableOpacity>
 
+      {/* Social Login Buttons */}
+      <Text style={styles.orText}>OR</Text>
+      <View style={styles.socialButtons}>
+        <Button title="Sign up with Facebook" onPress={() => Alert.alert('Info', 'Facebook sign up')} color="#3b5998" />
+        <Button title="Sign up with Google" onPress={() => Alert.alert('Info', 'Google sign up')} color="#DB4437" />
+      </View>
+
+      {/* Link to Login */}
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
         <Text style={styles.linkText}>Already have an account? Login</Text>
       </TouchableOpacity>
@@ -97,38 +92,49 @@ const RegisterScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     flexGrow: 1,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor: '#F4385A', // Matching background color
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 20,
+    color: '#FFFFFF', // White color for title
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
     borderRadius: 5,
+    padding: 10,
+    marginVertical: 8,
   },
   button: {
-    backgroundColor: '#007BFF',
-    padding: 15,
+    backgroundColor: '#FF9900', // Orange button color
     borderRadius: 5,
+    padding: 15,
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  linkText: {
-    color: '#007BFF',
+  orText: {
     textAlign: 'center',
+    marginVertical: 10,
+    color: '#FFFFFF', // White color for OR text
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+  },
+  linkText: {
+    color: '#00000', // Green color for links
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

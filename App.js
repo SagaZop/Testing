@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -9,11 +9,18 @@ import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import RestaurantDetailScreen from './screens/RestaurantDetailScreen';
+import PasswordResetScreen from './screens/PasswordResetScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
-import { initializeApp } from './utils/auth'; // Import your utility function for token check
+import CustomAlert from './components/CustomAlert'; // Import your CustomAlert component
+import { initializeApp } from './utils/auth';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Create Alert Context
+const AlertContext = createContext();
+
+export const useAlert = () => useContext(AlertContext);
 
 const HomeTabNavigator = () => {
   return (
@@ -50,7 +57,7 @@ const HomeTabNavigator = () => {
 const MainStackNavigator = ({ isLoggedIn }) => {
   return (
     <Stack.Navigator
-      initialRouteName={isLoggedIn ? 'MainHome' : 'Login'} // Redirect based on login status
+      initialRouteName={isLoggedIn ? 'MainHome' : 'Login'}
       screenOptions={{
         headerShown: false,
       }}
@@ -58,7 +65,8 @@ const MainStackNavigator = ({ isLoggedIn }) => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="MainHome" component={HomeTabNavigator} />
-      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen}/>
+      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+      <Stack.Screen name="ResetPassword" component={PasswordResetScreen} />
     </Stack.Navigator>
   );
 };
@@ -67,11 +75,27 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // Alert state management
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertType, setAlertType] = useState('success');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  // Function to show alert
+  const showAlert = (type, message) => {
+    setAlertType(type);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
+  // Function to hide alert
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
+
   useEffect(() => {
     const checkTokenStatus = async () => {
       try {
-        // Check token status and update login status
-        const accessToken = await initializeApp(); // Function to initialize token status
+        const accessToken = await initializeApp();
         if (accessToken) {
           setIsLoggedIn(true);
         }
@@ -87,7 +111,6 @@ const App = () => {
   }, []);
 
   if (loading) {
-    // Show loading indicator while checking token status
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007BFF" />
@@ -96,9 +119,18 @@ const App = () => {
   }
 
   return (
-    <NavigationContainer>
-      <MainStackNavigator isLoggedIn={isLoggedIn} />
-    </NavigationContainer>
+    <AlertContext.Provider value={{ showAlert }}>
+      <NavigationContainer>
+        <MainStackNavigator isLoggedIn={isLoggedIn} />
+        {/* CustomAlert will be visible above all other components */}
+        <CustomAlert
+          type={alertType}
+          message={alertMessage}
+          visible={alertVisible}
+          onHide={hideAlert}
+        />
+      </NavigationContainer>
+    </AlertContext.Provider>
   );
 };
 

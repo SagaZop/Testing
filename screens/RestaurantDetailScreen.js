@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 const RestaurantDetailScreen = ({ route }) => {
-  const { restaurantId } = route.params;
+  const { restaurantId } = route.params; // Retrieve restaurantId from params
+  console.log(restaurantId)
   const [restaurant, setRestaurant] = useState(null);
+  const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const defaultDishImage = 'http://10.0.2.2:5000/images/default-dish.png';
-
-  // Fetch restaurant details based on ID
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       try {
-        const response = await axios.get(`http://10.0.2.2:5000/api/restaurant/${restaurantId}`);
-        if (response.status === 200) {
-          setRestaurant(response.data);
-        }
+        // Fetch restaurant information
+        const restaurantResponse = await axios.get(
+          `http://10.0.2.2:5000/api/restaurant/${restaurantId}`
+        );
+        console.log(restaurantResponse.data)
+        setRestaurant(restaurantResponse.data);
+
+        // Fetch dishes for the restaurant
+        const dishesResponse = await axios.get(
+          `http://10.0.2.2:5000/api/dish?restaurant_id=${restaurantId}`
+        );
+        setDishes(dishesResponse.data);
       } catch (error) {
-        console.error('Error fetching restaurant details:', error);
+        console.error('Failed to fetch restaurant details:', error);
       } finally {
         setLoading(false);
       }
@@ -30,40 +37,44 @@ const RestaurantDetailScreen = ({ route }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6347" />
-      </View>
-    );
-  }
-
-  if (!restaurant) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Restaurant details not found.</Text>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Restaurant Name and Details */}
-      <Text style={styles.restaurantName}>{restaurant.name}</Text>
-      <Text style={styles.address}>{restaurant.address_id.street}, {restaurant.address_id.city}</Text>
+      {/* Restaurant Information */}
+      {restaurant && (
+        <View style={styles.restaurantInfoContainer}>
+          <Text style={styles.restaurantName}>{restaurant.name}</Text>
+          <Text style={styles.restaurantDetail}>
+            Address: {restaurant.address_id.street}, {restaurant.address_id.city}
+          </Text>
+          <Text style={styles.restaurantDetail}>Rating: {restaurant.overall_rating}</Text>
+          <Text style={styles.restaurantDetail}>
+            Delivery Time: {restaurant.delivery_time_estimate}
+          </Text>
+        </View>
+      )}
 
-      {/* Categories and Dishes */}
+      {/* Dishes */}
       <Text style={styles.sectionTitle}>Dishes</Text>
       <FlatList
-        data={restaurant.dishes}
-        keyExtractor={(dish) => dish._id}
+        data={dishes}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <View style={styles.dishCard}>
-            <Image
-              source={{ uri: item.image_url || defaultDishImage }}
-              style={styles.dishImage}
-            />
-            <View style={styles.dishInfo}>
-              <Text style={styles.dishName}>{item.name}</Text>
-              <Text style={styles.dishPrice}>${item.price}</Text>
-            </View>
+            {item.image_url ? (
+              <Image source={{ uri: item.image_url }} style={styles.dishImage} />
+            ) : (
+              <View style={styles.noImageContainer}>
+                <Text style={styles.dishName}>{item.name}</Text>
+              </View>
+            )}
+            <Text style={styles.dishName}>{item.name}</Text>
+            <Text style={styles.dishDetail}>Price: ₹{item.price}</Text>
+            <Text style={styles.dishDetail}>Category: {item.category_id.name}</Text>
           </View>
         )}
       />
@@ -74,7 +85,7 @@ const RestaurantDetailScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 20,
     backgroundColor: '#fff',
   },
   loadingContainer: {
@@ -82,15 +93,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  restaurantInfoContainer: {
+    marginBottom: 20,
+  },
   restaurantName: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 5,
   },
-  address: {
+  restaurantDetail: {
     fontSize: 16,
     color: '#555',
-    marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 20,
@@ -98,28 +110,29 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   dishCard: {
-    flexDirection: 'row',
-    marginBottom: 15,
+    backgroundColor: '#f8f8f8',
+    padding: 10,
     borderRadius: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f9f9f9',
+    marginBottom: 15,
   },
   dishImage: {
-    width: 100,
-    height: 100,
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
   },
-  dishInfo: {
-    padding: 10,
-    flex: 1,
+  noImageContainer: {
+    width: '100%',
+    height: 200,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 10,
   },
   dishName: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  dishPrice: {
+  dishDetail: {
     fontSize: 16,
     color: '#555',
   },

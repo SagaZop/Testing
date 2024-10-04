@@ -3,23 +3,27 @@ import {
   View,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
   TouchableOpacity,
   Image,
-  Alert,
+  StyleSheet,
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAlert } from '../App'; // Import useAlert hook
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Access the showAlert function
+  const { showAlert } = useAlert();
+
+
   const handleLogin = async () => {
     if (!email || !password) {
-      return Alert.alert('Error', 'Please fill in both email and password');
+
+      return showAlert('danger', 'Please fill in both email and password'); // Show custom alert;
     }
 
     const userData = { email, password };
@@ -37,20 +41,26 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem('refreshToken', refreshToken);
 
         // Navigate to Home screen
-        Alert.alert('Success', 'Logged in successfully!');
+        showAlert('success', 'Login Successfull'); // Show custom alert;
         navigation.navigate('MainHome');
       }
     } catch (error) {
       // Handle authentication errors or server errors
       if (error.response && error.response.data && error.response.data.message) {
-        Alert.alert('Login Error', error.response.data.message);
+        showAlert('danger', error.response.data.message); // Show custom alert
+
       } else {
-        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+        showAlert('danger', 'An unexpected error occurred. Please try again.'); // Show custom alert
       }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleResetPassword = () =>{
+    console.log("Clicked reset password");
+    navigation.navigate('ResetPassword')
+  }
 
   return (
     <View style={styles.container}>
@@ -59,12 +69,14 @@ const LoginScreen = ({ navigation }) => {
       <Text style={styles.title}>Zoppli</Text>
       <Text style={styles.subtitle}>100% Green Deliveries in India</Text>
 
-      {/* email and Password Inputs */}
+      {/* Email and Password Inputs */}
       <TextInput
         style={styles.input}
-        placeholder="email"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         style={styles.input}
@@ -79,20 +91,15 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Login'}</Text>
       </TouchableOpacity>
 
-      {/* OR Divider */}
-      <Text style={styles.orText}>OR</Text>
-      <View style={styles.socialButtons}>
-        <Button title="Facebook" onPress={() => {}} />
-        <Button title="Google" onPress={() => {}} />
+      {/* Links for Forgot Password and Registration */}
+      <View style={styles.linksContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.link}>Don't have an account? Register</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleResetPassword}>
+          <Text style={styles.link}>Forgot Password?</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Terms and Policies */}
-      <Text style={styles.footer}>
-        By continuing, you agree to our {'\n'}
-        <Text style={styles.link}>Terms of Service</Text>,{' '}
-        <Text style={styles.link}>Privacy Policy</Text>,{' '}
-        <Text style={styles.link}>Content Policy</Text>
-      </Text>
     </View>
   );
 };
@@ -138,22 +145,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  orText: {
-    textAlign: 'center',
-    marginVertical: 10,
-    color: '#FFFFFF',
-  },
-  socialButtons: {
+  linksContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  footer: {
-    textAlign: 'center',
-    color: '#FFFFFF',
+    justifyContent: 'space-between',
     marginTop: 20,
   },
   link: {
-    color: '#00C853',
+    color: '#00000',
+    textAlign: 'center',
   },
 });
 
